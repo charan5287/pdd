@@ -212,33 +212,19 @@ jobs:
           npm ci
           npm run build
 
-      - name: Deploy to gh-pages Branch (Dual Deploy Fallback 1)
+      - name: Deploy to gh-pages Branch
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: pdd/web/dist
           force_orphan: true
-        continue-on-error: true
-
-      - name: Upload Pages Artifact (Dual Deploy Fallback 2)
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: 'pdd/web/dist'
-        continue-on-error: true
-
-      - name: Deploy to GitHub Actions Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
-        continue-on-error: true
 
       - name: Install Python Dependencies
-        if: always()
         run: |
           python -m pip install --upgrade pip
           pip install -r automation/requirements.txt
 
       - name: Compile Master Reports (1,800 Total Test Cases)
-        if: always()
         run: |
           python automation/run_all_suites.py --suite all --compile
 
@@ -247,14 +233,12 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: MediNow-Master-E2E-Reports
-          path: |
-            Test Results/
-            automation/reports/
+          path: automation/reports/
           retention-days: 30
 
       - name: Publish Step Summary
         if: always()
         run: |
-          if [ -f "Test Results/Summary/summary.md" ]; then
-            cat "Test Results/Summary/summary.md" >> $GITHUB_STEP_SUMMARY
+          if [ -f "automation/reports/Summary/summary.md" ]; then
+            cat "automation/reports/Summary/summary.md" >> $GITHUB_STEP_SUMMARY
           fi
