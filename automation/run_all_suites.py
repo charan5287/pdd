@@ -17,13 +17,15 @@ from automation.utils.excel_report_generator import ExcelReportGenerator
 from automation.utils.html_report_generator import HTMLReportGenerator
 from automation.utils.summary_generator import SummaryGenerator
 
-# Import all 6 distinct 300-test-case modules
 from automation.tests.test_selenium_e2e_300 import TestSeleniumE2E300
 from automation.tests.test_appium_android_300 import TestAppiumAndroid300
 from automation.tests.test_unit_300 import TestUnit300
 from automation.tests.test_load_performance_300 import TestLoadPerformance300
 from automation.tests.test_validation_300 import TestValidation300
 from automation.tests.test_deploy_pipeline_300 import TestDeployPipeline300
+
+def get_project_root() -> str:
+    return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 def run_suite_and_generate_excel(suite_name: str, test_cases: list, filename: str, driver=None):
     logger.info(f"--- Running Suite: {suite_name} ({len(test_cases)} Test Cases) ---")
@@ -144,7 +146,6 @@ def main():
         except Exception:
             pass
 
-    # If running single suite only, save json and exit
     if args.suite != "all" and not args.compile:
         sys.exit(0)
 
@@ -170,6 +171,17 @@ def main():
     logger.info("=========================================================================")
     logger.info(f" Master Execution Complete: {passed_count}/{total_count} Passed ({pass_rate:.2f}%)")
     logger.info("=========================================================================")
+
+    # Ensure JSON files are created inside project root
+    root_dir = get_project_root()
+    json_dirs = [
+        os.path.join(root_dir, 'Test Results', 'JSON'),
+        os.path.join(root_dir, 'automation', 'reports', 'JSON')
+    ]
+    for jd in json_dirs:
+        os.makedirs(jd, exist_ok=True)
+        with open(os.path.join(jd, 'execution-results.json'), 'w', encoding='utf-8') as f:
+            json.dump({"metrics": master_metrics, "results": all_combined_results}, f, indent=2)
 
     excel_master = ExcelReportGenerator(all_combined_results, master_metrics)
     excel_master.generate_all_reports()
