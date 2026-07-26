@@ -218,6 +218,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: pdd/web/dist
           force_orphan: true
+        continue-on-error: true
 
       - name: Install Python Dependencies
         run: |

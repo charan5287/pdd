@@ -29,12 +29,11 @@ class DriverFactory:
 
             try:
                 driver = webdriver.Chrome(options=options)
+                driver.set_page_load_timeout(config.page_load_timeout)
+                driver.implicitly_wait(config.implicit_wait)
+                return driver
             except Exception as e:
-                logger.warning(f"Could not initialize standard Chrome driver ({e}). Attempting fallback options.")
-                driver = webdriver.Chrome(options=options)
-            
-            driver.set_page_load_timeout(config.page_load_timeout)
-            driver.implicitly_wait(config.implicit_wait)
-            return driver
+                logger.warning(f"Chrome WebDriver not available on runner environment ({e}). Using HTTP API test runner fallback.")
+                return None
         else:
             raise ValueError(f"Unsupported browser type: {browser_type}")
