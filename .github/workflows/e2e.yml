@@ -1,0 +1,247 @@
+name: e2e.yml
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+env:
+  BASE_URL: https://charan5287.github.io/pdd/
+  HEADLESS: "true"
+  BROWSER: "chrome"
+
+jobs:
+  selenium_tests:
+    name: 🌐 Selenium — Website Tests (300)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python & Chrome
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r automation/requirements.txt
+
+      - name: Execute Selenium E2E Suite (300)
+        run: |
+          python automation/run_all_suites.py --suite selenium
+
+      - name: Upload Selenium Excel Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Selenium_E2E_Test_Report
+          path: automation/reports/Excel/Selenium_E2E_Test_Report.xlsx
+
+  appium_tests:
+    name: 📱 Appium — Android Tests (300)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Dependencies & Appium
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r automation/requirements.txt
+          pip install Appium-Python-Client
+
+      - name: Execute Appium Mobile Suite (300)
+        run: |
+          python automation/run_all_suites.py --suite appium
+
+      - name: Upload Appium Excel Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Appium_Android_Test_Report
+          path: automation/reports/Excel/Appium_Android_Test_Report.xlsx
+
+  unit_tests:
+    name: 🧪 Unit Tests — API (300)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r automation/requirements.txt
+
+      - name: Execute Unit Test Suite (300)
+        run: |
+          python automation/run_all_suites.py --suite unit
+
+      - name: Upload Unit Test Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Unit_Test_Report
+          path: automation/reports/Excel/Unit_Test_Report.xlsx
+
+  validation_tests:
+    name: ✅ Validation Tests (300)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r automation/requirements.txt
+
+      - name: Execute Input Validation Suite (300)
+        run: |
+          python automation/run_all_suites.py --suite validation
+
+      - name: Upload Validation Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Validation_Test_Report
+          path: automation/reports/Excel/Validation_Test_Report.xlsx
+
+  deployment_status:
+    name: 🚀 Deployment Status (300)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r automation/requirements.txt
+
+      - name: Execute Deployment Pipeline Suite (300)
+        run: |
+          python automation/run_all_suites.py --suite deployment
+
+      - name: Upload Deployment Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Deployment_Pipeline_Test_Report
+          path: automation/reports/Excel/Deployment_Pipeline_Test_Report.xlsx
+
+  load_testing:
+    name: 📈 Load Testing — Performance (300)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r automation/requirements.txt
+
+      - name: Execute Load & Performance Suite (300)
+        run: |
+          python automation/run_all_suites.py --suite load
+
+      - name: Upload Load Testing Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Load_Performance_Test_Report
+          path: automation/reports/Excel/Load_Performance_Test_Report.xlsx
+
+  compile_master:
+    name: 📊 Compile Master Report & Deploy
+    needs: [selenium_tests, appium_tests, unit_tests, validation_tests, deployment_status, load_testing]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js & Python
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: 'pdd/web/package-lock.json'
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Build Web Application
+        run: |
+          cd pdd/web
+          npm ci
+          npm run build
+
+      - name: Upload Pages Artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: 'pdd/web/dist'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+      - name: Install Python Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r automation/requirements.txt
+
+      - name: Compile Master Reports (1,800 Total Test Cases)
+        run: |
+          python automation/run_all_suites.py --suite all --compile
+
+      - name: Upload All Master Reports & Artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: MediNow-Master-E2E-Reports
+          path: |
+            Test Results/
+            automation/reports/
+          retention-days: 30
+
+      - name: Publish Step Summary
+        if: always()
+        run: |
+          if [ -f "Test Results/Summary/summary.md" ]; then
+            cat "Test Results/Summary/summary.md" >> $GITHUB_STEP_SUMMARY
+          fi

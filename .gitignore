@@ -40,6 +40,8 @@ frontend/android/java_pid*.hprof
 *.apk
 *.aab
 *.ipa
+*.jpg
+*.png
 
 # OS & Editor
 .DS_Store
