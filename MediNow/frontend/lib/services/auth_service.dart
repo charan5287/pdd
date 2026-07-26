@@ -143,6 +143,10 @@ class AuthService {
       case 'operation-not-allowed': return 'Email/password accounts are not enabled.';
       case 'too-many-requests': return 'Too many attempts. Please try again later.';
       case 'invalid-credential': return 'Incorrect email or password. Please try again.';
+      case 'invalid-verification-code': return 'Invalid authentication verification code. Please check and try again.';
+      case 'invalid-verification-id': return 'Verification session expired. Please request a new code.';
+      case 'missing-verification-code': return 'Please enter the 6-digit authentication code.';
+      case 'missing-verification-id': return 'Authentication session expired. Please try signing in again.';
       default: return 'Authentication failed: $code';
     }
   }
