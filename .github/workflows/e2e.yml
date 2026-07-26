@@ -212,14 +212,22 @@ jobs:
           npm ci
           npm run build
 
-      - name: Upload Pages Artifact
+      - name: Deploy to gh-pages Branch (Dual Deploy Fallback 1)
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: pdd/web/dist
+          force_orphan: true
+
+      - name: Upload Pages Artifact (Dual Deploy Fallback 2)
         uses: actions/upload-pages-artifact@v3
         with:
           path: 'pdd/web/dist'
 
-      - name: Deploy to GitHub Pages
+      - name: Deploy to GitHub Actions Pages
         id: deployment
         uses: actions/deploy-pages@v4
+        continue-on-error: true
 
       - name: Install Python Dependencies
         run: |
