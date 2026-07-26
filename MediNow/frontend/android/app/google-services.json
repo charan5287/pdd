@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "305716110825",
+    "project_id": "medinow-8519b",
+    "storage_bucket": "medinow-8519b.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:305716110825:android:ba44321b9e10eac24ed778",
+        "android_client_info": {
+          "package_name": "com.medinow.medinow_frontend"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCd-zt_UbTgyyPu33BJwndytdrbw3Fv4bk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

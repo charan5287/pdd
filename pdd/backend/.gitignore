@@ -1,0 +1,6 @@
+venv/
+__pycache__/
+*.pyc
+.env
+medinow.db
+firebase-service-account.json

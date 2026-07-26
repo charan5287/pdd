@@ -1,0 +1,57 @@
+# ─── Secrets & Credentials (NEVER commit) ────────────────────────────────────
+.env
+firebase-service-account.json
+*.keystore
+*.jks
+*.p12
+*.pem
+google-services.json
+
+# ─── Python ───────────────────────────────────────────────────────────────────
+venv/
+__pycache__/
+**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+medinow.db
+uploads/
+scratch/
+
+# ─── Flutter / Dart ───────────────────────────────────────────────────────────
+.dart_tool/
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+build/
+**/build/
+.idea/
+*.iml
+*.class
+android/.gradle/
+android/local.properties
+android/key.properties
+android/app/debug/
+android/app/profile/
+android/app/release/
+# Large text/log files
+*.txt
+*.log
+hs_err_pid*.log
+
+# ─── Node / Web ───────────────────────────────────────────────────────────────
+node_modules/
+dist/
+
+# ─── Binaries (use GitHub Releases) ──────────────────────────────────────────
+*.apk
+*.aab
+*.ipa
+
+# ─── OS / Editor ─────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+*.swp
+*.swo

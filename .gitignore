@@ -1,0 +1,49 @@
+# Secrets & Credentials
+**/.env
+**/firebase-service-account.json
+**/*.keystore
+**/*.jks
+**/*.p12
+**/*.pem
+
+# Java / Android Heap Dumps & Logs
+*.hprof
+**/*.hprof
+*.log
+**/*.log
+frontend/android/java_pid*.hprof
+
+# Python Backend
+**/venv/
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/*.db
+**/uploads/
+**/scratch/
+
+# Flutter & Dart
+**/.dart_tool/
+**/.flutter-plugins-dependencies
+**/.pub-cache/
+**/.pub/
+**/build/
+**/*.class
+**/local.properties
+**/key.properties
+
+# Web & Node
+**/node_modules/
+**/dist/
+
+# Binaries & Large Files
+*.apk
+*.aab
+*.ipa
+
+# OS & Editor
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
