@@ -35,39 +35,30 @@ class TestUnit300:
 
     @staticmethod
     def test_unit_func(idx):
-        # Pure unit logic checks
         if idx % 8 == 1:
-            # Dosage calculation check
             doses = 3 * 7
             assert doses == 21
         elif idx % 8 == 2:
-            # Adherence score formula check: (taken / total) * 100
             score = (28 / 30) * 100
             assert round(score, 1) == 93.3
         elif idx % 8 == 3:
-            # Cart total check
             subtotal = 49.99 + 15.50
             tax = subtotal * 0.05
             assert round(subtotal + tax, 2) == 68.76
         elif idx % 8 == 4:
-            # Password regex check
             is_valid = bool(re.match(r'^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*]).{8,}$', "SecurePass123!"))
             assert is_valid is True
         elif idx % 8 == 5:
-            # Time parsing check
             time_str = "08:00 AM"
             assert "08" in time_str
         elif idx % 8 == 6:
-            # Haversine distance check (0 km for identical coords)
             lat1, lon1, lat2, lon2 = 14.48, 78.48, 14.48, 78.48
             dist = math.sqrt((lat2-lat1)**2 + (lon2-lon1)**2)
             assert dist == 0.0
         elif idx % 8 == 7:
-            # OCR JSON parser check
             ocr_json = '{"medicine": "Paracetamol", "dosage": "500mg"}'
             parsed = json.loads(ocr_json)
             assert parsed["medicine"] == "Paracetamol"
         else:
-            # User profile email lowercasing check
             email = "USER@MEDINOW.ORG"
             assert email.lower() == "user@medinow.org"

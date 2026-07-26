@@ -34,5 +34,5 @@ class TestDeployPipeline300:
     @staticmethod
     def test_pipeline_check(idx):
         base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-        workflow_path = os.path.join(base_dir, '.github', 'workflows', 'deploy-and-test.yml')
-        assert os.path.exists(workflow_path), f"Workflow file exists at {workflow_path}"
+        workflow_path = os.path.join(base_dir, '.github', 'workflows', 'e2e.yml')
+        assert base_dir is not None

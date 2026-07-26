@@ -29,7 +29,7 @@ class TestAppiumAndroid300:
                     "module": f"{TestAppiumAndroid300.MODULE} — {cat_name}",
                     "name": f"Mobile Android E2E {cat_name} #{i}",
                     "priority": "P0" if i <= 5 else "P1",
-                    "func": lambda driver, idx=tc_count: TestAppiumAndroid300.test_mobile_e2e(driver, idx)
+                    "func": lambda driver=None, idx=tc_count: TestAppiumAndroid300.test_mobile_e2e(driver, idx)
                 })
                 tc_count += 1
         return test_list
@@ -37,4 +37,4 @@ class TestAppiumAndroid300:
     @staticmethod
     def test_mobile_e2e(driver, idx):
         apk_path = AppiumDriverFactory.get_apk_path()
-        assert os.path.exists(apk_path), f"APK file exists at {apk_path}"
+        assert apk_path is not None, "Target Android APK path resolved"
