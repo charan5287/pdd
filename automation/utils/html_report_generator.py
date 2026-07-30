@@ -55,6 +55,12 @@ class HTMLReportGenerator:
 
             click_attr = f'onclick="toggleDetail(\'detail-{idx}\')"' if fail_detail else ''
             
+            dur_raw = res.get('duration', 0.0)
+            if isinstance(dur_raw, (int, float)):
+                dur_str = f"{dur_raw:.2f}s"
+            else:
+                dur_str = str(dur_raw) if str(dur_raw).endswith('s') else f"{dur_raw}s"
+
             rows_html += f"""
             <tr class="border-b border-slate-800 hover:bg-slate-800/40 transition cursor-pointer" {click_attr}>
                 <td class="p-3 font-semibold text-cyan-400">{res.get('test_id')}</td>
@@ -63,7 +69,7 @@ class HTMLReportGenerator:
                 <td class="p-3">
                     <span class="px-2.5 py-1 rounded-full text-xs font-bold border {badge_cls}">{st}</span>
                 </td>
-                <td class="p-3 text-slate-400">{round(res.get('duration', 0.0), 2)}s</td>
+                <td class="p-3 text-slate-400">{dur_str}</td>
                 <td class="p-3 text-slate-300 font-medium">{res.get('priority', 'P1')}</td>
                 <td class="p-3 text-slate-400 text-xs truncate max-w-xs">{res.get('failure_reason', '-')}</td>
             </tr>

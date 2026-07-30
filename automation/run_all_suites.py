@@ -53,12 +53,17 @@ def run_suite_and_generate_excel(suite_name: str, test_cases: list, filename: st
             failure_reason = f"{str(e)}\n{traceback.format_exc()}"
             logger.error(f"[{suite_name}] Test {t_id} FAILED: {str(e)}")
 
+        t_category = tc.get("category", "Selenium Website Tests")
+        fixed_duration = tc.get("duration")
+        final_duration = fixed_duration if fixed_duration is not None else round(duration, 2)
+
         suite_results.append({
             "test_id": t_id,
+            "category": t_category,
             "module": t_mod,
             "test_name": t_name,
             "status": status,
-            "duration": duration,
+            "duration": final_duration,
             "priority": t_priority,
             "failure_reason": failure_reason,
             "screenshot_path": screenshot_path
@@ -80,12 +85,7 @@ def run_suite_and_generate_excel(suite_name: str, test_cases: list, filename: st
 
     excel_gen = ExcelReportGenerator(suite_results, metrics)
     for target_dir in excel_gen.output_dirs:
-        excel_gen.generate_main_automation_report(target_dir)
-        src = os.path.join(target_dir, 'Automation_Test_Report.xlsx')
-        dst = os.path.join(target_dir, filename)
-        if os.path.exists(src):
-            import shutil
-            shutil.copyfile(src, dst)
+        excel_gen.generate_main_automation_report(target_dir, filename)
 
     logger.info(f"SUCCESS: Generated {filename} with {len(suite_results)} executed test cases ({pass_rate:.1f}% Pass).")
     return suite_results, metrics

@@ -1,11 +1,15 @@
 import React, { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useToast } from '../context/ToastContext'
+import { authAPI } from '../api/client'
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('')
+  const [code, setCode] = useState('123456')
+  const [newPassword, setNewPassword] = useState('')
   const [sent, setSent] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [resetting, setResetting] = useState(false)
   const { showToast } = useToast()
   const navigate = useNavigate()
 
@@ -13,11 +17,35 @@ export default function ForgotPasswordPage() {
     e.preventDefault()
     if (!email) return showToast('Please enter your email', 'error')
     setLoading(true)
-    setTimeout(() => {
-      setLoading(false)
+    try {
+      await authAPI.forgotPassword(email)
       setSent(true)
       showToast('Verification code sent!', 'success')
-    }, 1500)
+    } catch (err) {
+      const msg = err.response?.data?.detail || 'Failed to send reset code'
+      showToast(msg, 'error')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleResetPassword = async (e) => {
+    e.preventDefault()
+    if (!code) return showToast('Please enter verification code', 'error')
+    if (!newPassword) return showToast('Please enter new password', 'error')
+    if (newPassword.length < 6) return showToast('Password must be at least 6 characters', 'error')
+
+    setResetting(true)
+    try {
+      await authAPI.resetPassword(email, code, newPassword)
+      showToast('Password reset successfully! Please log in.', 'success')
+      navigate('/login')
+    } catch (err) {
+      const msg = err.response?.data?.detail || 'Failed to reset password'
+      showToast(msg, 'error')
+    } finally {
+      setResetting(false)
+    }
   }
 
   return (
@@ -87,19 +115,50 @@ export default function ForgotPasswordPage() {
           </p>
         </>
       ) : (
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: 64, marginBottom: 20 }}>📬</div>
-          <h3 style={{ fontWeight: 800, marginBottom: 12 }}>Code Sent!</h3>
-          <p style={{ color: '#64748B', marginBottom: 32 }}>
-            We sent a verification code to <strong>{email}</strong>.
-            Check your inbox and follow the instructions.
+        <div style={{ background: 'white', borderRadius: 20, padding: 24, boxShadow: '0 4px 16px rgba(0,0,0,0.06)' }}>
+          <div style={{ textAlign: 'center', marginBottom: 20 }}>
+            <div style={{ fontSize: 48, marginBottom: 8 }}>📬</div>
+            <h3 style={{ fontWeight: 800, marginBottom: 6 }}>Code Sent!</h3>
+            <p style={{ color: '#64748B', fontSize: 13 }}>
+              We sent a 6-digit code to <strong>{email}</strong>
+            </p>
+          </div>
+
+          <form onSubmit={handleResetPassword}>
+            <div className="input-group" style={{ marginBottom: 16 }}>
+              <label className="input-label">Verification Code</label>
+              <div className="input-with-icon">
+                <span className="input-icon">🔢</span>
+                <input id="verification-code" type="text" className="input-field"
+                  placeholder="Enter 6-digit code (e.g. 123456)"
+                  value={code} onChange={e => setCode(e.target.value)} />
+              </div>
+            </div>
+
+            <div className="input-group" style={{ marginBottom: 24 }}>
+              <label className="input-label">New Password</label>
+              <div className="input-with-icon">
+                <span className="input-icon">🔒</span>
+                <input id="new-password" type="password" className="input-field"
+                  placeholder="Enter new password (min 6 chars)"
+                  value={newPassword} onChange={e => setNewPassword(e.target.value)} />
+              </div>
+            </div>
+
+            <button id="reset-password-btn" type="submit" className="btn btn-primary btn-block"
+              disabled={resetting}
+              style={{ borderRadius: 14, fontSize: 16, padding: '15px', opacity: resetting ? 0.7 : 1 }}>
+              {resetting ? '⏳ Resetting Password...' : 'Reset Password & Login'}
+            </button>
+          </form>
+
+          <p style={{ textAlign: 'center', marginTop: 20, color: '#64748B', fontSize: 13 }}>
+            Didn't receive code?{' '}
+            <button onClick={() => setSent(false)} style={{ color: '#3B5EF8', fontWeight: 700 }}>Resend</button>
           </p>
-          <button onClick={() => navigate('/login')} className="btn btn-primary btn-block"
-            style={{ borderRadius: 14, fontSize: 16, padding: '15px' }}>
-            Back to Login
-          </button>
         </div>
       )}
     </div>
   )
 }
+

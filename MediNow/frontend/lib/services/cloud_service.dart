@@ -33,7 +33,7 @@ class CloudService {
         'phone': phone,
         'role': role,
         'createdAt': FieldValue.serverTimestamp(),
-      }).timeout(const Duration(seconds: 40));
+      }).timeout(const Duration(seconds: 10));
     } catch (e) {
       debugPrint('🔥 Firestore Write Error: $e');
       if (e.toString().contains('PERMISSION_DENIED')) {
@@ -85,35 +85,46 @@ class CloudService {
     String? expiryDate,
     int dailyDosage = 1,
   }) async {
-    if (uid == null) return;
+    final activeUid = uid;
+    if (activeUid == null) {
+      debugPrint('⚠️ addMedicine failed: User not logged in (uid is null)');
+      throw Exception('User not logged in');
+    }
     
-    final inventoryRef = _firestore
-        .collection('users')
-        .doc(uid)
-        .collection('inventory');
+    try {
+      final inventoryRef = _firestore
+          .collection('users')
+          .doc(activeUid)
+          .collection('inventory');
 
-    // Check if exists
-    final existing = await inventoryRef
-        .where('medicine_name', isEqualTo: medicineName)
-        .limit(1)
-        .get();
+      // Check if exists
+      final existing = await inventoryRef
+          .where('medicine_name', isEqualTo: medicineName)
+          .limit(1)
+          .get()
+          .timeout(const Duration(seconds: 8));
 
-    if (existing.docs.isNotEmpty) {
-      final doc = existing.docs.first;
-      await doc.reference.update({
-        'quantity_remaining': FieldValue.increment(quantity),
-        'daily_dosage': dailyDosage,
-        'last_updated': FieldValue.serverTimestamp(),
-      });
-    } else {
-      await inventoryRef.add({
-        'medicine_name': medicineName,
-        'quantity_remaining': quantity,
-        'daily_dosage': dailyDosage,
-        'expiry_date': expiryDate ?? 
-            DateTime.now().add(const Duration(days: 365)).toIso8601String(),
-        'last_updated': FieldValue.serverTimestamp(),
-      });
+      if (existing.docs.isNotEmpty) {
+        final doc = existing.docs.first;
+        await doc.reference.update({
+          'quantity_remaining': FieldValue.increment(quantity),
+          'daily_dosage': dailyDosage,
+          'last_updated': FieldValue.serverTimestamp(),
+        }).timeout(const Duration(seconds: 8));
+      } else {
+        await inventoryRef.add({
+          'medicine_name': medicineName,
+          'quantity_remaining': quantity,
+          'daily_dosage': dailyDosage,
+          'expiry_date': expiryDate ?? 
+              DateTime.now().add(const Duration(days: 365)).toIso8601String(),
+          'last_updated': FieldValue.serverTimestamp(),
+        }).timeout(const Duration(seconds: 8));
+      }
+      debugPrint('✅ Added medicine to Firestore: $medicineName ($quantity units)');
+    } catch (e) {
+      debugPrint('🔥 Error in CloudService.addMedicine: $e');
+      rethrow;
     }
   }
 

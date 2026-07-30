@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from database import engine
 from models import models
-from routers import auth, ai, prescription, pharmacy, smart
+from routers import auth, ai, prescription, pharmacy, smart, db_viewer
 from services import firebase_config
 import uvicorn
 import logging
@@ -40,10 +40,16 @@ app.include_router(ai.router)
 app.include_router(prescription.router)
 app.include_router(pharmacy.router)
 app.include_router(smart.router)
+app.include_router(db_viewer.router)
 
 @app.get("/")
 async def root():
-    return {"message": "MediNow API is running", "version": "2.0.0"}
+    return {
+        "message": "MediNow API is running",
+        "version": "2.0.0",
+        "database_explorer": "http://127.0.0.1:8000/db",
+        "swagger_docs": "http://127.0.0.1:8000/docs"
+    }
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 8000))

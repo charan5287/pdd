@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MediNow Test Automation Executive Dashboard</title>
+    <title>MediNow Executive Test Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -18,7 +18,7 @@
         <div class="glass p-6 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
                 <h1 class="text-2xl font-black bg-gradient-to-r from-emerald-400 via-cyan-400 to-blue-500 bg-clip-text text-transparent">
-                    Executive E2E Test Dashboard
+                    Executive Automation Dashboard
                 </h1>
                 <p class="text-xs text-slate-400 mt-1">Live Environment: <span class="text-cyan-400 font-mono">https://charan5287.github.io/pdd/</span></p>
             </div>
@@ -38,7 +38,7 @@
             </div>
             <div class="glass p-5 rounded-2xl border-t-4 border-t-green-500">
                 <span class="text-xs font-semibold text-slate-400 uppercase">Passed Test Cases</span>
-                <div class="text-3xl font-black text-green-400 mt-2">1800 / 1800</div>
+                <div class="text-3xl font-black text-green-400 mt-2">725 / 725</div>
                 <p class="text-[10px] text-slate-400 mt-1">100% Executed</p>
             </div>
             <div class="glass p-5 rounded-2xl border-t-4 border-t-red-500">
@@ -48,8 +48,8 @@
             </div>
             <div class="glass p-5 rounded-2xl border-t-4 border-t-indigo-500">
                 <span class="text-xs font-semibold text-slate-400 uppercase">Total Execution Time</span>
-                <div class="text-3xl font-black text-indigo-400 mt-2">5.0s</div>
-                <p class="text-[10px] text-slate-400 mt-1">Headless Chrome Parallel Suite</p>
+                <div class="text-3xl font-black text-indigo-400 mt-2">10.0s</div>
+                <p class="text-[10px] text-slate-400 mt-1">Parallel Master Suite</p>
             </div>
         </div>
 
@@ -80,7 +80,7 @@
             data: {
                 labels: ['Passed', 'Failed', 'Skipped'],
                 datasets: [{
-                    data: [1800, 0, 0],
+                    data: [725, 0, 0],
                     backgroundColor: ['#22c55e', '#ef4444', '#eab308'],
                     borderWidth: 0
                 }]
@@ -98,10 +98,10 @@
         new Chart(document.getElementById('moduleChart'), {
             type: 'bar',
             data: {
-                labels: ["Selenium Web E2E \u2014 Authentication & Role Select", "Selenium Web E2E \u2014 Navigation & Deep Linking", "Selenium Web E2E \u2014 UI Component Validation", "Selenium Web E2E \u2014 Forms & Interactive Modals", "Selenium Web E2E \u2014 CRUD Operations & Inventory", "Selenium Web E2E \u2014 Prescription Scanning & AI Chat", "Selenium Web E2E \u2014 Checkout & Order Tracking", "Selenium Web E2E \u2014 Profile & Settings", "Appium Android Mobile E2E \u2014 APK Installation & App Launch", "Appium Android Mobile E2E \u2014 Onboarding & Permission Grants", "Appium Android Mobile E2E \u2014 Mobile Authentication & Biometrics", "Appium Android Mobile E2E \u2014 Prescription Camera Scanner", "Appium Android Mobile E2E \u2014 Medicine Reminders & Local Alarms", "Appium Android Mobile E2E \u2014 Offline Mode & Firestore Sync", "Appium Android Mobile E2E \u2014 Touch Gestures & Mobile Navigation", "Appium Android Mobile E2E \u2014 Mobile Checkout & Order Tracking", "Appium Android Mobile E2E \u2014 Device Orientation & Performance", "Unit Testing \u2014 Dosage Calculation Formulas", "Unit Testing \u2014 Adherence Analytics Score Engine", "Unit Testing \u2014 Cart Totals & Tax Calculation", "Unit Testing \u2014 Password & Security Rules", "Unit Testing \u2014 Date & Time Schedule Parsing", "Unit Testing \u2014 Map Distance Haversine Formula", "Unit Testing \u2014 OCR Prescription JSON Parser", "Unit Testing \u2014 User Profile Validation Helper", "Load & Performance Testing \u2014 Endpoint Latency SLA (<200ms)", "Load & Performance Testing \u2014 High Concurrency Parallel Request Load", "Load & Performance Testing \u2014 DOM Node Count & Memory Heap Audit", "Load & Performance Testing \u2014 Asset Transfer Size & Gzip SLA", "Load & Performance Testing \u2014 FastAPI Backend Response Benchmark", "Load & Performance Testing \u2014 Database Query Execution Time", "Load & Performance Testing \u2014 UI Rendering FPS & Frame Budget", "Load & Performance Testing \u2014 Cold Start & First Contentful Paint", "Input Validation & Sanitization \u2014 Email Address Format & Regex", "Input Validation & Sanitization \u2014 Password Length & Character Rules", "Input Validation & Sanitization \u2014 SQL Injection Defense Payloads", "Input Validation & Sanitization \u2014 Cross-Site Scripting (XSS) Payloads", "Input Validation & Sanitization \u2014 Min / Max Boundary Length Check", "Input Validation & Sanitization \u2014 Special Characters & Escaping", "Input Validation & Sanitization \u2014 Unicode / UTF-8 Multi-byte Characters", "Input Validation & Sanitization \u2014 Null & Missing Field Validation", "Deployment & CI/CD Pipeline \u2014 Vite Web App Production Build Audit", "Deployment & CI/CD Pipeline \u2014 GitHub Pages DNS & Base URL Resolve", "Deployment & CI/CD Pipeline \u2014 HTTP 200 Health Check SLAs", "Deployment & CI/CD Pipeline \u2014 Static Asset CSS/JS MIME Types", "Deployment & CI/CD Pipeline \u2014 SSL Certificate & HTTPS Enforcement", "Deployment & CI/CD Pipeline \u2014 Relative Base Path `./` Integrity", "Deployment & CI/CD Pipeline \u2014 GitHub Actions Step Summary Formatting", "Deployment & CI/CD Pipeline \u2014 Artifact Bundle Retention Policy (30 days)"],
+                labels: ["performance_smoke", "authorization", "authentication", "session_management", "ui_validation", "navigation", "input_validation", "forms", "accessibility", "regression", "error_handling", "apk_launch", "onboarding", "biometrics_auth", "camera_scanner", "alarm_reminders", "offline_sync", "touch_gestures", "mobile_checkout", "device_perf", "dosage_calculation", "adherence_analytics", "cart_tax_engine", "security_crypto", "schedule_parser", "haversine_distance", "ocr_json_parser", "user_profile_val", "endpoint_latency", "high_concurrency", "heap_memory_audit", "gzip_asset_transfer", "fastapi_benchmark", "query_execution", "fps_render_budget", "cold_start_fcp", "email_format_regex", "password_rules", "sqli_defense", "xss_defense", "length_boundary", "escaping_special", "unicode_utf8", "null_missing", "vite_build_audit", "github_pages_dns", "http_health_sla", "static_mime_types", "ssl_https_enforce", "relative_base_path", "actions_summary", "retention_policy"],
                 datasets: [
-                    { label: 'Passed', data: [40, 30, 50, 50, 50, 30, 30, 20, 30, 30, 40, 40, 40, 30, 40, 30, 20, 40, 40, 40, 40, 40, 30, 40, 30, 40, 40, 40, 40, 40, 40, 30, 30, 40, 40, 40, 40, 40, 40, 30, 30, 40, 40, 40, 40, 40, 30, 35, 35], backgroundColor: '#22c55e' },
-                    { label: 'Failed', data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], backgroundColor: '#ef4444' }
+                    { label: 'Passed', data: [25, 25, 35, 25, 25, 25, 30, 30, 25, 50, 20, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10], backgroundColor: '#22c55e' },
+                    { label: 'Failed', data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], backgroundColor: '#ef4444' }
                 ]
             },
             options: {

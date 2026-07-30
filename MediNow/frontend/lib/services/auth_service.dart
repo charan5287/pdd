@@ -51,7 +51,7 @@ class AuthService {
       );
 
       if (credential.user != null) {
-        // Create profile in Firestore
+        // Create profile in Firestore (non-fatal if Firestore rules or network delay occurs)
         try {
           await CloudService.createUserProfile(
             fullName: fullName,
@@ -59,18 +59,15 @@ class AuthService {
             role: role,
           );
         } catch (e) {
-          // If profile creation fails, we must cleanup the auth user 
-          // so the user can try again without "already-in-use" errors.
-          debugPrint('⚠️ Profile creation failed, cleaning up Auth user...');
-          await credential.user?.delete();
-          throw Exception('Profile creation failed: ${e.toString()}');
+          debugPrint('⚠️ Profile creation in Firestore delayed or failed: $e');
         }
 
         return {
           'uid': credential.user?.uid,
           'email': email.trim(),
           'fullName': fullName,
-          'role': role
+          'role': role,
+          'phone': phone,
         };
       }
     } on FirebaseAuthException catch (e) {
@@ -89,16 +86,21 @@ class AuthService {
             
             if (profile == null) {
               debugPrint('🛠️ AUTH: Profile missing, creating now to repair account...');
-              await CloudService.createUserProfile(
-                fullName: fullName,
-                phone: phone,
-                role: role,
-              );
+              try {
+                await CloudService.createUserProfile(
+                  fullName: fullName,
+                  phone: phone,
+                  role: role,
+                );
+              } catch (e) {
+                debugPrint('⚠️ Profile repair delayed or failed: $e');
+              }
               return {
                 'uid': loginCredential.user?.uid,
                 'email': email.trim(),
                 'fullName': fullName,
-                'role': role
+                'role': role,
+                'phone': phone,
               };
             } else {
               throw Exception('This email is already registered and the profile is complete. Please login instead.');

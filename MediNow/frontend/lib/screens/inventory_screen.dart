@@ -101,7 +101,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
       body: inv.isLoading
           ? const Center(child: CircularProgressIndicator())
           : inv.inventory.isEmpty
-              ? _buildEmptyState()
+              ? _buildEmptyState(context, auth.user?['uid'] as String?)
               : RefreshIndicator(
                   onRefresh: () async {
                     final String? uid = auth.user?['uid'] as String?;
@@ -116,10 +116,112 @@ class _InventoryScreenState extends State<InventoryScreen> {
                         _buildMedicineCard(inv.inventory[index]),
                   ),
                 ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => _showAddMedicineDialog(context, auth.user?['uid'] as String?),
+        backgroundColor: AppColors.primary,
+        icon: const Icon(Icons.add_rounded, color: Colors.white),
+        label: const Text('Add Medicine', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+      ),
     );
   }
 
-  Widget _buildEmptyState() {
+  void _showAddMedicineDialog(BuildContext context, String? uid) {
+    final nameCtrl = TextEditingController();
+    final qtyCtrl = TextEditingController(text: '30');
+    final dosageCtrl = TextEditingController(text: '1');
+    final formKey = GlobalKey<FormState>();
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Row(
+          children: [
+            Icon(Icons.add_circle_outline, color: AppColors.primary),
+            SizedBox(width: 10),
+            Text('Add Medicine', style: TextStyle(fontWeight: FontWeight.bold)),
+          ],
+        ),
+        content: SingleChildScrollView(
+          child: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  controller: nameCtrl,
+                  decoration: const InputDecoration(
+                    labelText: 'Medicine Name',
+                    hintText: 'e.g. Paracetamol 650mg',
+                    prefixIcon: Icon(Icons.medication),
+                  ),
+                  validator: (v) => (v == null || v.trim().isEmpty) ? 'Enter medicine name' : null,
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: qtyCtrl,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: 'Quantity (Total Pills)',
+                    hintText: '30',
+                    prefixIcon: Icon(Icons.numbers),
+                  ),
+                  validator: (v) => (v == null || int.tryParse(v) == null) ? 'Enter valid quantity' : null,
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: dosageCtrl,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: 'Daily Dosage (Pills/day)',
+                    hintText: '1',
+                    prefixIcon: Icon(Icons.schedule),
+                  ),
+                  validator: (v) => (v == null || int.tryParse(v) == null) ? 'Enter valid daily dosage' : null,
+                ),
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            onPressed: () async {
+              if (!formKey.currentState!.validate()) return;
+              Navigator.pop(ctx);
+              final inv = Provider.of<InventoryProvider>(context, listen: false);
+              final success = await inv.addMedicine(
+                uid: uid,
+                name: nameCtrl.text.trim(),
+                quantity: int.parse(qtyCtrl.text.trim()),
+                dailyDosage: int.parse(dosageCtrl.text.trim()),
+              );
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(success ? '✓ ${nameCtrl.text.trim()} added to inventory' : 'Failed to add medicine'),
+                    backgroundColor: success ? const Color(0xFF00C896) : Colors.red,
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              }
+            },
+            child: const Text('Add Medicine'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyState(BuildContext context, String? uid) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -141,9 +243,21 @@ class _InventoryScreenState extends State<InventoryScreen> {
                   color: Color(0xFF1A1A2E))),
           const SizedBox(height: 8),
           Text(
-            'Scan a prescription to add medicines\nautomatically',
+            'Scan a prescription or tap below to add medicines manually',
             textAlign: TextAlign.center,
             style: TextStyle(color: Colors.grey.shade600, height: 1.5),
+          ),
+          const SizedBox(height: 20),
+          ElevatedButton.icon(
+            onPressed: () => _showAddMedicineDialog(context, uid),
+            icon: const Icon(Icons.add_rounded),
+            label: const Text('Add Medicine Manually'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            ),
           ),
         ],
       ),

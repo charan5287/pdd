@@ -22,10 +22,10 @@ class ExcelReportGenerator:
         for d in self.output_dirs:
             os.makedirs(d, exist_ok=True)
 
-    def generate_all_reports(self):
+    def generate_all_reports(self, filename: str = 'Automation_Test_Report.xlsx'):
         logger.info("Generating Excel reports using openpyxl...")
         for d in self.output_dirs:
-            self.generate_main_automation_report(d)
+            self.generate_main_automation_report(d, filename)
             self.generate_passed_tests_report(d)
             self.generate_failed_tests_report(d)
             self.generate_summary_report(d)
@@ -62,12 +62,12 @@ class ExcelReportGenerator:
                 max_len = max(max_len, len(val))
             ws.column_dimensions[col_letter].width = min(max(max_len + 3, 12), 60)
 
-    def generate_main_automation_report(self, target_dir: str):
-        filepath = os.path.join(target_dir, 'Automation_Test_Report.xlsx')
+    def generate_main_automation_report(self, target_dir: str, filename: str = 'Automation_Test_Report.xlsx'):
+        filepath = os.path.join(target_dir, filename)
         wb = openpyxl.Workbook()
         wb.remove(wb.active)
 
-        headers = ['Test ID', 'Module', 'Test Name', 'Status', 'Execution Time (s)', 'Priority', 'Failure Reason']
+        headers = ['Test ID', 'Description', 'Module', 'Test Name', 'Status', 'Duration', 'Priority']
 
         # Sheet 1: Executed Test Cases
         ws1 = wb.create_sheet(title='Executed Test Cases')
@@ -76,66 +76,124 @@ class ExcelReportGenerator:
             self._apply_header_style(cell)
         
         for idx, res in enumerate(self.test_results, start=2):
+            dur = res.get('duration', 0.0)
+            if isinstance(dur, (int, float)):
+                dur_str = f"{dur:.2f}s"
+            else:
+                dur_str = str(dur) if str(dur).endswith('s') else f"{dur}s"
+
             row_data = [
                 res.get('test_id', ''),
+                res.get('description', res.get('category', 'Verify functionality')),
                 res.get('module', ''),
                 res.get('test_name', ''),
-                res.get('status', ''),
-                round(res.get('duration', 0.0), 3),
-                res.get('priority', 'P1'),
-                res.get('failure_reason', '')
+                res.get('status', 'PASSED'),
+                dur_str,
+                res.get('priority', 'Medium')
             ]
             ws1.append(row_data)
             row_cells = ws1[idx]
             self._apply_row_style(row_cells, is_even=(idx % 2 == 0), status=res.get('status'))
             
-            status_cell = row_cells[3]
+            # Status cell formatting (Column Index 4 -> 5th column 'Status')
+            status_cell = row_cells[4]
             st = res.get('status', 'PASSED')
             if st == 'PASSED':
                 status_cell.fill = PatternFill(start_color='C6EFCE', end_color='C6EFCE', fill_type='solid')
-                status_cell.font = Font(color='006100', bold=True)
+                status_cell.font = Font(name='Calibri', size=10, color='006100', bold=True)
+                status_cell.alignment = Alignment(horizontal='center', vertical='center')
             elif st == 'FAILED':
                 status_cell.fill = PatternFill(start_color='FFC7CE', end_color='FFC7CE', fill_type='solid')
-                status_cell.font = Font(color='9C0006', bold=True)
+                status_cell.font = Font(name='Calibri', size=10, color='9C0006', bold=True)
+                status_cell.alignment = Alignment(horizontal='center', vertical='center')
             elif st == 'SKIPPED':
                 status_cell.fill = PatternFill(start_color='FFEB9C', end_color='FFEB9C', fill_type='solid')
-                status_cell.font = Font(color='9C6500', bold=True)
+                status_cell.font = Font(name='Calibri', size=10, color='9C6500', bold=True)
+                status_cell.alignment = Alignment(horizontal='center', vertical='center')
         self._auto_fit_columns(ws1)
 
         # Sheet 2: Passed Tests
         ws2 = wb.create_sheet(title='Passed Tests')
-        ws2.append(headers[:6])
+        ws2.append(headers)
         for cell in ws2[1]:
             self._apply_header_style(cell)
         passed_tests = [r for r in self.test_results if r.get('status') == 'PASSED']
         for idx, res in enumerate(passed_tests, start=2):
-            row_data = [res.get('test_id'), res.get('module'), res.get('test_name'), 'PASSED', round(res.get('duration', 0.0), 3), res.get('priority')]
+            dur = res.get('duration', 0.0)
+            dur_str = f"{dur:.2f}s" if isinstance(dur, (int, float)) else (str(dur) if str(dur).endswith('s') else f"{dur}s")
+            row_data = [
+                res.get('test_id'),
+                res.get('category', 'Selenium Website Tests'),
+                res.get('module'),
+                res.get('test_name'),
+                'PASSED',
+                dur_str,
+                res.get('priority', 'Medium')
+            ]
             ws2.append(row_data)
-            self._apply_row_style(ws2[idx], is_even=(idx % 2 == 0), status='PASSED')
+            row_cells = ws2[idx]
+            self._apply_row_style(row_cells, is_even=(idx % 2 == 0), status='PASSED')
+            status_cell = row_cells[4]
+            status_cell.fill = PatternFill(start_color='C6EFCE', end_color='C6EFCE', fill_type='solid')
+            status_cell.font = Font(name='Calibri', size=10, color='006100', bold=True)
+            status_cell.alignment = Alignment(horizontal='center', vertical='center')
         self._auto_fit_columns(ws2)
 
         # Sheet 3: Failed Tests
         ws3 = wb.create_sheet(title='Failed Tests')
-        ws3.append(headers)
+        headers_failed = headers + ['Failure Reason']
+        ws3.append(headers_failed)
         for cell in ws3[1]:
             self._apply_header_style(cell)
         failed_tests = [r for r in self.test_results if r.get('status') == 'FAILED']
         for idx, res in enumerate(failed_tests, start=2):
-            row_data = [res.get('test_id'), res.get('module'), res.get('test_name'), 'FAILED', round(res.get('duration', 0.0), 3), res.get('priority'), res.get('failure_reason')]
+            dur = res.get('duration', 0.0)
+            dur_str = f"{dur:.2f}s" if isinstance(dur, (int, float)) else (str(dur) if str(dur).endswith('s') else f"{dur}s")
+            row_data = [
+                res.get('test_id'),
+                res.get('category', 'Selenium Website Tests'),
+                res.get('module'),
+                res.get('test_name'),
+                'FAILED',
+                dur_str,
+                res.get('priority', 'Medium'),
+                res.get('failure_reason', '')
+            ]
             ws3.append(row_data)
-            self._apply_row_style(ws3[idx], is_even=(idx % 2 == 0), status='FAILED')
+            row_cells = ws3[idx]
+            self._apply_row_style(row_cells, is_even=(idx % 2 == 0), status='FAILED')
+            status_cell = row_cells[4]
+            status_cell.fill = PatternFill(start_color='FFC7CE', end_color='FFC7CE', fill_type='solid')
+            status_cell.font = Font(name='Calibri', size=10, color='9C0006', bold=True)
+            status_cell.alignment = Alignment(horizontal='center', vertical='center')
         self._auto_fit_columns(ws3)
 
         # Sheet 4: Skipped Tests
         ws4 = wb.create_sheet(title='Skipped Tests')
-        ws4.append(headers)
+        ws4.append(headers_failed)
         for cell in ws4[1]:
             self._apply_header_style(cell)
         skipped_tests = [r for r in self.test_results if r.get('status') == 'SKIPPED']
         for idx, res in enumerate(skipped_tests, start=2):
-            row_data = [res.get('test_id'), res.get('module'), res.get('test_name'), 'SKIPPED', round(res.get('duration', 0.0), 3), res.get('priority'), res.get('failure_reason', '')]
+            dur = res.get('duration', 0.0)
+            dur_str = f"{dur:.2f}s" if isinstance(dur, (int, float)) else (str(dur) if str(dur).endswith('s') else f"{dur}s")
+            row_data = [
+                res.get('test_id'),
+                res.get('category', 'Selenium Website Tests'),
+                res.get('module'),
+                res.get('test_name'),
+                'SKIPPED',
+                dur_str,
+                res.get('priority', 'Medium'),
+                res.get('failure_reason', '')
+            ]
             ws4.append(row_data)
-            self._apply_row_style(ws4[idx], is_even=(idx % 2 == 0), status='SKIPPED')
+            row_cells = ws4[idx]
+            self._apply_row_style(row_cells, is_even=(idx % 2 == 0), status='SKIPPED')
+            status_cell = row_cells[4]
+            status_cell.fill = PatternFill(start_color='FFEB9C', end_color='FFEB9C', fill_type='solid')
+            status_cell.font = Font(name='Calibri', size=10, color='9C6500', bold=True)
+            status_cell.alignment = Alignment(horizontal='center', vertical='center')
         self._auto_fit_columns(ws4)
 
         # Sheet 5: Execution Metrics
@@ -156,8 +214,6 @@ class ExcelReportGenerator:
         for idx, (m_name, m_val) in enumerate(metrics, start=2):
             ws5.append([m_name, m_val])
             self._apply_row_style(ws5[idx], is_even=(idx % 2 == 0))
-        self._auto_fit_columns(ws5)
-
         # Sheet 6: Defect Summary
         ws6 = wb.create_sheet(title='Defect Summary')
         ws6.append(['Defect ID', 'Module', 'Associated Test ID', 'Defect Title', 'Severity', 'Failure Traceback'])
@@ -175,39 +231,83 @@ class ExcelReportGenerator:
             self._apply_row_style(ws6[idx], is_even=(idx % 2 == 0), status='FAILED')
         self._auto_fit_columns(ws6)
 
-        wb.save(filepath)
+        self._safe_save(wb, filepath)
+
+    def _safe_save(self, wb, filepath):
+        try:
+            wb.save(filepath)
+        except Exception as e:
+            fallback = filepath.replace('.xlsx', '_Latest.xlsx')
+            logger.warning(f"Could not save Excel file to {filepath} (file may be open in Excel). Saving fallback to {fallback}. Error: {e}")
+            try:
+                wb.save(fallback)
+            except Exception:
+                pass
 
     def generate_passed_tests_report(self, target_dir: str):
         filepath = os.path.join(target_dir, 'Passed_Test_Cases.xlsx')
         wb = openpyxl.Workbook()
         ws = wb.active
         ws.title = "Passed Test Cases"
-        headers = ['Test ID', 'Module', 'Test Name', 'Status', 'Execution Time (s)', 'Priority']
+        headers = ['Test ID', 'Description', 'Module', 'Test Name', 'Status', 'Duration', 'Priority']
         ws.append(headers)
         for cell in ws[1]:
             self._apply_header_style(cell)
         passed_tests = [r for r in self.test_results if r.get('status') == 'PASSED']
         for idx, res in enumerate(passed_tests, start=2):
-            ws.append([res.get('test_id'), res.get('module'), res.get('test_name'), 'PASSED', round(res.get('duration', 0.0), 3), res.get('priority')])
-            self._apply_row_style(ws[idx], is_even=(idx % 2 == 0), status='PASSED')
+            dur = res.get('duration', 0.0)
+            dur_str = f"{dur:.2f}s" if isinstance(dur, (int, float)) else (str(dur) if str(dur).endswith('s') else f"{dur}s")
+            row_data = [
+                res.get('test_id'),
+                res.get('description', res.get('category', 'Verify functionality')),
+                res.get('module'),
+                res.get('test_name'),
+                'PASSED',
+                dur_str,
+                res.get('priority', 'Medium')
+            ]
+            ws.append(row_data)
+            row_cells = ws[idx]
+            self._apply_row_style(row_cells, is_even=(idx % 2 == 0), status='PASSED')
+            status_cell = row_cells[4]
+            status_cell.fill = PatternFill(start_color='C6EFCE', end_color='C6EFCE', fill_type='solid')
+            status_cell.font = Font(name='Calibri', size=10, color='006100', bold=True)
+            status_cell.alignment = Alignment(horizontal='center', vertical='center')
         self._auto_fit_columns(ws)
-        wb.save(filepath)
+        self._safe_save(wb, filepath)
 
     def generate_failed_tests_report(self, target_dir: str):
         filepath = os.path.join(target_dir, 'Failed_Test_Cases.xlsx')
         wb = openpyxl.Workbook()
         ws = wb.active
         ws.title = "Failed Test Cases"
-        headers = ['Test ID', 'Module', 'Test Name', 'Status', 'Execution Time (s)', 'Priority', 'Failure Reason']
+        headers = ['Test ID', 'Description', 'Module', 'Test Name', 'Status', 'Duration', 'Priority', 'Failure Reason']
         ws.append(headers)
         for cell in ws[1]:
             self._apply_header_style(cell)
         failed_tests = [r for r in self.test_results if r.get('status') == 'FAILED']
         for idx, res in enumerate(failed_tests, start=2):
-            ws.append([res.get('test_id'), res.get('module'), res.get('test_name'), 'FAILED', round(res.get('duration', 0.0), 3), res.get('priority'), res.get('failure_reason')])
-            self._apply_row_style(ws[idx], is_even=(idx % 2 == 0), status='FAILED')
+            dur = res.get('duration', 0.0)
+            dur_str = f"{dur:.2f}s" if isinstance(dur, (int, float)) else (str(dur) if str(dur).endswith('s') else f"{dur}s")
+            row_data = [
+                res.get('test_id'),
+                res.get('description', res.get('category', 'Verify functionality')),
+                res.get('module'),
+                res.get('test_name'),
+                'FAILED',
+                dur_str,
+                res.get('priority', 'Medium'),
+                res.get('failure_reason', '')
+            ]
+            ws.append(row_data)
+            row_cells = ws[idx]
+            self._apply_row_style(row_cells, is_even=(idx % 2 == 0), status='FAILED')
+            status_cell = row_cells[4]
+            status_cell.fill = PatternFill(start_color='FFC7CE', end_color='FFC7CE', fill_type='solid')
+            status_cell.font = Font(name='Calibri', size=10, color='9C0006', bold=True)
+            status_cell.alignment = Alignment(horizontal='center', vertical='center')
         self._auto_fit_columns(ws)
-        wb.save(filepath)
+        self._safe_save(wb, filepath)
 
     def generate_summary_report(self, target_dir: str):
         filepath = os.path.join(target_dir, 'Summary_Report.xlsx')
@@ -238,4 +338,4 @@ class ExcelReportGenerator:
             ws.append([mod, tot, pas, fai, skp, f"{rate:.1f}%"])
             self._apply_row_style(ws[idx], is_even=(idx % 2 == 0))
         self._auto_fit_columns(ws)
-        wb.save(filepath)
+        self._safe_save(wb, filepath)

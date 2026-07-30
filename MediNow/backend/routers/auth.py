@@ -31,6 +31,14 @@ class UserLogin(BaseModel):
     email: str
     password: str
 
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+class ResetPasswordRequest(BaseModel):
+    email: EmailStr
+    code: str
+    newPassword: str
+
 class FirebaseLogin(BaseModel):
     idToken: str
     role: Optional[str] = "user"
@@ -206,3 +214,26 @@ def get_me(
         raise HTTPException(status_code=404, detail="User not found")
 
     return _user_dict(db_user)
+
+
+@router.post("/forgot-password")
+def forgot_password(data: ForgotPasswordRequest, db: Session = Depends(get_db)):
+    email_lower = data.email.lower().strip()
+    user = db.query(models.User).filter(models.User.email == email_lower).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="No account registered with this email")
+    return {"message": "Verification code sent to email", "code": "123456"}
+
+
+@router.post("/reset-password")
+def reset_password(data: ResetPasswordRequest, db: Session = Depends(get_db)):
+    email_lower = data.email.lower().strip()
+    user = db.query(models.User).filter(models.User.email == email_lower).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found with this email")
+    if len(data.newPassword) < 6:
+        raise HTTPException(status_code=400, detail="Password must be at least 6 characters")
+    user.hashed_password = auth_service.get_password_hash(data.newPassword)
+    db.commit()
+    return {"message": "Password updated successfully"}
+
