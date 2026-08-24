@@ -27,18 +27,24 @@ logger.info(f"GEMINI_API_KEY loaded: {'Yes' if os.getenv('GEMINI_API_KEY') else 
 if os.getenv('GEMINI_API_KEY') and len(os.getenv('GEMINI_API_KEY', '')) < 10:
     logger.warning("⚠️ GEMINI_API_KEY seems too short to be valid!")
 
-# Initialize Database
-models.Base.metadata.create_all(bind=engine)
-
-# Auto-seed database if empty
-try:
-    from seed_data import seed_database
-    seed_database()
-except Exception as e:
-    logger.warning(f"⚠️ Database auto-seed check failed or was skipped: {e}")
-
-
 app = FastAPI(title="MediNow API")
+
+@app.on_event("startup")
+async def startup_event():
+    # Initialize Database
+    logger.info("Initializing database tables...")
+    try:
+        models.Base.metadata.create_all(bind=engine)
+        logger.info("Database tables initialized successfully.")
+    except Exception as e:
+        logger.error(f"❌ Database initialization failed: {e}")
+
+    # Auto-seed database if empty
+    try:
+        from seed_data import seed_database
+        seed_database()
+    except Exception as e:
+        logger.warning(f"⚠️ Database auto-seed check failed or was skipped: {e}")
 
 app.add_middleware(
     CORSMiddleware,
