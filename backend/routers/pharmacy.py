@@ -71,11 +71,11 @@ async def _get_gemini_amenities(lat: float, lng: float, amenity_type: str):
         
     try:
         genai.configure(api_key=api_key)
-        # Select reliable models from the verified list
         model_names = [
             'gemini-2.5-flash',
-            'gemini-2.5-pro',
-            'gemini-flash-latest',
+            'gemini-3.5-flash',
+            'gemini-2.0-flash',
+            'gemini-1.5-flash',
         ]
         
         prompt = f"""
