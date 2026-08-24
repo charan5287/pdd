@@ -25,7 +25,7 @@ if DATABASE_URL.startswith("sqlite") and os.getenv("RENDER"):
         "Set DATABASE_URL to a PostgreSQL connection string for persistent storage."
     )
 
-connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
+connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {"connect_timeout": 10}
 
 engine = create_engine(
     DATABASE_URL, connect_args=connect_args
