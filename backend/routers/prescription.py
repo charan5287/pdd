@@ -97,9 +97,10 @@ async def gemini_ocr(file_path: str):
         Example: [{"name": "Telma 40", "display_name": "Telma 40mg Tablet", "dosage": "40mg", "frequency": "Once daily", "frequency_per_day": 1, "timings": ["08:00"], "duration_days": 30, "instructions": "After breakfast", "purpose": "For Blood Pressure"}]
         """
 
-        # Models ordered by reliability — valid Gemini vision-capable models only
         model_names = [
             'gemini-2.5-flash',
+            'gemini-3.5-flash',
+            'gemini-2.0-flash',
             'gemini-1.5-flash',
         ]
         
