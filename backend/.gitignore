@@ -1,0 +1,11 @@
+venv/
+__pycache__/
+*.pyc
+.env
+medinow.db
+medinow.db-shm
+medinow.db-wal
+firebase-service-account.json
+*.apk
+uploads/
+scratch/
