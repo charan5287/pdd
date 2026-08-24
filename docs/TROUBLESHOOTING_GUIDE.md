@@ -26,7 +26,7 @@ This guide provides solutions for common issues encountered during local executi
 
 - **Symptom**: Main index page loads, but styling or interactivity is missing.
 - **Cause**: Absolute base path `/` instead of relative base path `./`.
-- **Fix**: Verify `base: './'` is configured in [pdd/web/vite.config.js](file:///e:/Medicine/pdd/web/vite.config.js).
+- **Fix**: Verify `base: './'` is configured in [web_app/vite.config.js](file:///e:/Medicine/web_app/vite.config.js).
 
 ---
 

@@ -12,3 +12,4 @@ google-generativeai
 google-auth
 firebase-admin
 psycopg2-binary
+requests

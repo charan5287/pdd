@@ -36,8 +36,8 @@ To enable automated deployment to GitHub Pages via GitHub Actions:
 |---|---|---|
 | **Stage 1** | Repository Checkout | `actions/checkout@v4` |
 | **Stage 2** | Setup Environments | `actions/setup-node@v4` & `actions/setup-python@v5` |
-| **Stage 3** | Build Application | `npm run build` in `pdd/web` |
-| **Stage 4** | Static Analysis | Asset manifest audit in `pdd/web/dist` |
+| **Stage 3** | Build Application | `npm run build` in `web_app` |
+| **Stage 4** | Static Analysis | Asset manifest audit in `web_app/dist` |
 | **Stage 5** | Deploy to GitHub Pages | `actions/upload-pages-artifact@v3` & `actions/deploy-pages@v4` |
 | **Stage 6** | Wait for Deployment | Propagation delay (15s) |
 | **Stage 7** | Deployment Verification | `python automation/utils/verify_deployment.py` |
