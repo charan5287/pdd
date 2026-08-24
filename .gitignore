@@ -38,6 +38,8 @@ frontend/android/java_pid*.hprof
 
 # Binaries & Large Files
 *.apk
+!backend/app-release.apk
+!frontend/app-release.apk
 *.aab
 *.ipa
 *.jpg

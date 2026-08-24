@@ -26,6 +26,14 @@ if os.getenv('GEMINI_API_KEY') and len(os.getenv('GEMINI_API_KEY', '')) < 10:
 # Initialize Database
 models.Base.metadata.create_all(bind=engine)
 
+# Auto-seed database if empty
+try:
+    from seed_data import seed_database
+    seed_database()
+except Exception as e:
+    logger.warning(f"⚠️ Database auto-seed check failed or was skipped: {e}")
+
+
 app = FastAPI(title="MediNow API")
 
 app.add_middleware(
