@@ -32,7 +32,7 @@ def check_refills(user_id: int, db: Session = Depends(get_db)):
                 "message": f"Running low! ~{round(days_left, 1)} days supply left.",
                 "action": "Order Refill"
             })
-    return {"to_refill": to_refill}
+    return to_refill
 
 
 @router.get("/expiries/{user_id}")

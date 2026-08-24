@@ -156,30 +156,7 @@ async def gemini_ocr(file_path: str):
             return 'QUOTA_EXCEEDED'
         return None
 
-@router.post("/scan")
-async def scan_prescription(
-    file: UploadFile = File(...), 
-    user_id: int = Form(1),
-    db: Session = Depends(get_db),
-    auth: HTTPAuthorizationCredentials = Depends(security)
-):
-    # Try to get user_id from token if provided, fallback to Form user_id
-    if auth:
-        try:
-            payload = jwt.decode(auth.credentials, SECRET_KEY, algorithms=[ALGORITHM])
-            user_id = payload.get("id", user_id)
-        except JWTError:
-            pass
 
-    print(f"DEBUG: Received scan request for file: {file.filename}, User ID: {user_id}")
-    safe_filename = os.path.basename(file.filename or "prescription.jpg")
-    file_path = os.path.join(UPLOAD_DIR, safe_filename)
-    try:
-        with open(file_path, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
-    except Exception as write_err:
-        print(f"ERROR: Could not write uploaded file: {write_err}")
-        raise HTTPException(status_code=500, detail=f"Failed to save uploaded file: {write_err}")
     
 async def analyze_drug_interactions_and_validations(detected_medicines: list, user_id: int, db: Session) -> list:
     """
