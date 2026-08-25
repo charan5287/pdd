@@ -9,10 +9,12 @@ KEYS = [
 KEYS = [k for k in KEYS if k and len(k) > 15]
 
 MODELS = [
+    "gemini-3.5-flash-lite",
+    "gemini-3.6-flash",
+    "gemini-flash-latest",
+    "gemini-flash-lite-latest",
     "gemini-2.5-flash",
     "gemini-3.5-flash",
-    "gemini-2.0-flash",
-    "gemini-1.5-flash",
 ]
 
 async def generate_gemini_content(prompt: str, contents=None) -> str | None:

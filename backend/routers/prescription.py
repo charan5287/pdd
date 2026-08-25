@@ -98,10 +98,12 @@ async def gemini_ocr(file_path: str):
         """
 
         model_names = [
+            'gemini-3.5-flash-lite',
+            'gemini-3.6-flash',
+            'gemini-flash-latest',
+            'gemini-flash-lite-latest',
             'gemini-2.5-flash',
             'gemini-3.5-flash',
-            'gemini-2.0-flash',
-            'gemini-1.5-flash',
         ]
         
         response = None
@@ -467,14 +469,43 @@ def verify_prescription_by_pharmacist(
     }
 
 
+def normalize_med_name(name: str) -> str:
+    if not name:
+        return ""
+    cleaned = re.sub(r'\b(tablets?|tabs?|capsules?|caps?|syrups?|syps?|injections?|inj|drops?|cream|gel|oint|ointment)\b', '', name, flags=re.IGNORECASE)
+    cleaned = re.sub(r'[^a-zA-Z0-9\s]', ' ', cleaned)
+    return " ".join(cleaned.lower().split())
+
+def normalize_time_str(time_str: str) -> str:
+    if not time_str:
+        return "08:00"
+    time_str = str(time_str).strip()
+    try:
+        if "AM" in time_str.upper() or "PM" in time_str.upper():
+            t = datetime.datetime.strptime(time_str.upper(), "%I:%M %p")
+            return t.strftime("%H:%M")
+        elif ":" in time_str:
+            parts = time_str.split(":")
+            h = int(parts[0])
+            m = int(parts[1][:2])
+            return f"{h:02d}:{m:02d}"
+    except Exception:
+        pass
+    return time_str
+
+
 @router.post("/sync-to-reminders")
 def sync_prescription_to_reminders(data: dict, db: Session = Depends(get_db)):
-    """Automatically add all extracted prescription medicines to Reminders and User Inventory."""
+    """Automatically add all extracted prescription medicines to Reminders and User Inventory with smart deduplication."""
     user_id = data.get("user_id", 1)
     medicines = data.get("medicines", [])
     
     if not medicines:
         raise HTTPException(status_code=400, detail="No medicines provided to sync")
+
+    # Fetch user's existing inventory & reminders once
+    existing_inventory = db.query(models.UserMedicine).filter(models.UserMedicine.user_id == user_id).all()
+    existing_reminders = db.query(models.Reminder).filter(models.Reminder.user_id == user_id).all()
 
     added_reminders = []
     for med in medicines:
@@ -482,17 +513,20 @@ def sync_prescription_to_reminders(data: dict, db: Session = Depends(get_db)):
         dosage = med.get("dosage", "1 tablet")
         timings = med.get("timings", ["08:00"])
         duration = med.get("duration_days", 30)
+        norm_name = normalize_med_name(med_name)
 
-        # 1. Add to User Inventory
+        # 1. Add / Update User Inventory
         expiry = datetime.datetime.utcnow() + datetime.timedelta(days=365)
-        existing_med = db.query(models.UserMedicine).filter(
-            models.UserMedicine.user_id == user_id,
-            models.UserMedicine.medicine_name == med_name
-        ).first()
+        existing_med = next(
+            (m for m in existing_inventory if normalize_med_name(m.medicine_name) == norm_name or m.medicine_name.lower() == med_name.lower()),
+            None
+        )
 
         if existing_med:
             existing_med.quantity_remaining += (duration * len(timings))
             existing_med.last_updated = datetime.datetime.utcnow()
+            if len(timings) > 0:
+                existing_med.daily_dosage = len(timings)
         else:
             new_med = models.UserMedicine(
                 user_id=user_id,
@@ -502,25 +536,31 @@ def sync_prescription_to_reminders(data: dict, db: Session = Depends(get_db)):
                 daily_dosage=len(timings)
             )
             db.add(new_med)
+            existing_inventory.append(new_med)
 
-        # 2. Add Reminders for each timing
+        # 2. Add Reminders for each timing (avoiding duplicate slots for same tablet)
         for t in timings:
-            existing_rem = db.query(models.Reminder).filter(
-                models.Reminder.user_id == user_id,
-                models.Reminder.medicine_name == med_name,
-                models.Reminder.time == t
-            ).first()
+            t_norm = normalize_time_str(t)
+            existing_rem = next(
+                (r for r in existing_reminders if (normalize_med_name(r.medicine_name) == norm_name or r.medicine_name.lower() == med_name.lower()) and normalize_time_str(r.time) == t_norm),
+                None
+            )
 
-            if not existing_rem:
+            if existing_rem:
+                # Update dosage and ensure active
+                existing_rem.dosage = dosage
+                existing_rem.is_active = True
+            else:
                 rem = models.Reminder(
                     user_id=user_id,
                     medicine_name=med_name,
                     dosage=dosage,
-                    time=t,
+                    time=t_norm,
                     is_active=True
                 )
                 db.add(rem)
-                added_reminders.append(f"{med_name} at {t}")
+                existing_reminders.append(rem)
+                added_reminders.append(f"{med_name} at {t_norm}")
 
     db.commit()
     sync_user_data_to_realtime_db(user_id, db)
@@ -530,4 +570,5 @@ def sync_prescription_to_reminders(data: dict, db: Session = Depends(get_db)):
         "message": f"Successfully synced {len(medicines)} medicines to Reminders & Inventory!",
         "added": added_reminders
     }
+
 

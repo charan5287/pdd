@@ -7,12 +7,14 @@ import 'cloud_service.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'dart:convert';
 class ApiService {
+  static const String _renderCloudUrl = 'https://medinow-api.onrender.com';
+
   static String get _defaultLocalUrl {
     if (kIsWeb) return 'http://127.0.0.1:8000';
-    return 'http://10.0.2.2:8000';
+    return _renderCloudUrl;
   }
 
-  static String _currentBaseUrl = kIsWeb ? 'http://127.0.0.1:8000' : 'http://10.0.2.2:8000';
+  static String _currentBaseUrl = _renderCloudUrl;
 
   static String get baseUrl => _currentBaseUrl;
 
@@ -30,11 +32,13 @@ class ApiService {
   static Future<void> init() async {
     try {
       final savedUrl = await _storage.read(key: 'backend_url');
-      if (savedUrl != null && savedUrl.isNotEmpty) {
+      if (savedUrl != null && savedUrl.isNotEmpty && savedUrl != 'http://10.0.2.2:8000') {
         _currentBaseUrl = savedUrl;
         _dio.options.baseUrl = savedUrl;
         debugPrint('🌐 ApiService: Loaded custom backend URL: $_currentBaseUrl');
       } else {
+        _currentBaseUrl = _renderCloudUrl;
+        _dio.options.baseUrl = _renderCloudUrl;
         debugPrint('🌐 ApiService: Using default backend URL: $_currentBaseUrl');
       }
     } catch (e) {
@@ -399,11 +403,9 @@ class ApiService {
   }
 
   static Future<Map<String, dynamic>> _scanPrescriptionLocally(Uint8List bytes, String filename) async {
-    // Using a reliable vision model (gemini-1.5-flash is NOT available with this key)
-    final model = GenerativeModel(
-      model: 'gemini-2.5-flash',
-      apiKey: _geminiApiKey,
-    );
+    final activeModels = ['gemini-3.5-flash-lite', 'gemini-3.6-flash', 'gemini-flash-latest', 'gemini-2.5-flash'];
+    GenerativeModel? model;
+    GenerateContentResponse? response;
 
     const prompt = """
     You are a World-Class Medical OCR and Prescription Analysis Specialist.
@@ -428,14 +430,24 @@ class ApiService {
     - duration_days MUST be an integer.
     """;
 
-    final response = await model.generateContent([
-      Content.multi([
-        TextPart(prompt),
-        DataPart('image/jpeg', bytes),
-      ])
-    ]);
-
-    final text = response.text?.trim() ?? '';
+    for (final mName in activeModels) {
+      try {
+        model = GenerativeModel(
+          model: mName,
+          apiKey: _geminiApiKey,
+        );
+        response = await model.generateContent([
+          Content.multi([
+            TextPart(prompt),
+            DataPart('image/jpeg', bytes),
+          ])
+        ]);
+        if (response.text != null && response.text!.isNotEmpty) break;
+      } catch (e) {
+        debugPrint('Local OCR with $mName failed: $e, trying next...');
+        continue;
+      }
+    final text = response?.text?.trim() ?? '';
     String cleanedText = text;
     if (cleanedText.startsWith("```json")) {
       cleanedText = cleanedText.substring(7, cleanedText.length - 3).trim();
