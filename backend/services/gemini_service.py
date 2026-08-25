@@ -5,6 +5,8 @@ import google.generativeai as genai
 # Multi-key fallback list for seamless operation & zero quota blocks
 KEYS = [
     os.environ.get("GEMINI_API_KEY", ""),
+    os.environ.get("GEMINI_API_KEY_2", ""),
+    "AIzaSyAwRwzIvVt9yqy5pkd4WWPWnGCgc1ZKdhs",  # Flutter client key fallback
 ]
 KEYS = [k for k in KEYS if k and len(k) > 15]
 

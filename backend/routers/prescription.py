@@ -23,15 +23,15 @@ UPLOAD_DIR = "uploads/prescriptions"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 async def gemini_ocr(file_path: str):
-    api_key = os.environ.get("GEMINI_API_KEY", "")
-    invalid_keys = ["", "your_gemini_api_key_here", "PASTE_YOUR_KEY_HERE", "YOUR_API_KEY"]
-    
-    if api_key in invalid_keys:
-        print("DEBUG: Gemini API Key is a placeholder. Skipping real OCR.")
+    from services.gemini_service import KEYS, MODELS
+    api_keys = KEYS
+    if not api_keys:
+        print("DEBUG: No valid Gemini API Keys configured. Skipping real OCR.")
         return None
     
     try:
-        print(f"DEBUG: Attempting Gemini OCR with key starting with: {api_key[:5]}...")
+        api_key = api_keys[0]
+        print(f"DEBUG: Attempting Gemini OCR with {len(api_keys)} key(s), starting with: {api_key[:8]}...")
         genai.configure(api_key=api_key)
         
         # System instructions to set the persona and extraction rules
@@ -109,32 +109,36 @@ async def gemini_ocr(file_path: str):
         response = None
         last_error_str = ""
         
-        for name in model_names:
-            try:
-                print(f"DEBUG: Attempting Gemini OCR with model: {name}")
-                model = genai.GenerativeModel(
-                    model_name=name,
-                    system_instruction=system_instructions
-                )
-                # 30s timeout per model so a slow model doesn't stall the chain
-                response = await asyncio.wait_for(
-                    asyncio.to_thread(model.generate_content, [prompt, img]),
-                    timeout=30.0
-                )
-                if response and response.text:
-                    print(f"DEBUG: Successfully generated content using model: {name}")
-                    break
-            except asyncio.TimeoutError:
-                print(f"DEBUG: Model {name} timed out after 45s, trying next model...")
-                last_error_str = "TimeoutError"
-                continue
-            except Exception as e:
-                last_error_str = str(e)
-                print(f"DEBUG: Model {name} generation failed: {last_error_str}")
-                continue
-        
+        # Try every key + every model combination until one succeeds
+        for key in api_keys:
+            genai.configure(api_key=key)
+            for name in model_names:
+                try:
+                    print(f"DEBUG: Attempting OCR with key={key[:8]}... model={name}")
+                    model = genai.GenerativeModel(
+                        model_name=name,
+                        system_instruction=system_instructions
+                    )
+                    response = await asyncio.wait_for(
+                        asyncio.to_thread(model.generate_content, [prompt, img]),
+                        timeout=30.0
+                    )
+                    if response and response.text:
+                        print(f"DEBUG: Successfully generated content using key={key[:8]}... model={name}")
+                        break
+                except asyncio.TimeoutError:
+                    print(f"DEBUG: Model {name} timed out, trying next...")
+                    last_error_str = "TimeoutError"
+                    continue
+                except Exception as e:
+                    last_error_str = str(e)
+                    print(f"DEBUG: Model {name} generation failed: {last_error_str}")
+                    continue
+            if response and response.text:
+                break  # Stop key rotation once we have a valid response
+
         if not response:
-            print("ERROR: All Gemini models failed to generate content.")
+            print("ERROR: All Gemini keys and models failed to generate content.")
             if 'RESOURCE_EXHAUSTED' in last_error_str or '429' in last_error_str or 'quota' in last_error_str.lower():
                 return 'QUOTA_EXCEEDED'
             return None
